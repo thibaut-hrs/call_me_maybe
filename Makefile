@@ -1,5 +1,8 @@
 UV = uv
-PROJECT = src/call_me_maybe.py
+PROJECT = call_me_maybe.py
 
 install:
 	$(UV) sync
+
+run:
+	$(UV) run python $(PROJECT)
