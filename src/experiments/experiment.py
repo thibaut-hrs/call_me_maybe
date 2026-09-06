@@ -1,4 +1,5 @@
 from llm_sdk import Small_LLM_Model
+import json
 
 
 def main() -> None:
@@ -8,21 +9,24 @@ def main() -> None:
     print(f"Original text: {prompt}")
 
     token_batch = llm.encode(prompt)
-    print(f"\nencoded: {token_batch}")
+    token_ids = token_batch.tolist()[0]
+    print(f"Token IDs: {token_ids}")
+    print(f"token_ids type: {type(token_ids)}")
+    print(f"First element type {type(token_ids[0])}")
 
-    print(f"Type: {type(token_batch)}")
+    logits = llm.get_logits_from_input_ids(token_ids)
+    print(f"logits type: {type(logits)}")
+    print(f"logits len: {len(logits)}")
+    print(f"Ten first logits: {logits[:10]}\n")
 
-    print(f"Shape: {token_batch.shape}")
-
-    print(
-        f"token_batch.tolist() = {token_batch.tolist()}, "
-        f"type = {type(token_batch.tolist())}"
-    )
-
-    decoded: str = ""
-    for token_sequence in token_batch:
-        decoded += llm.decode(token_sequence)
-    print(f"Decoded: {decoded}")
+    tokenizer_path: str = llm.get_path_to_tokenizer_file()
+    print(f"tokenizer path: {tokenizer_path}")
+    with open(tokenizer_path, "r") as file:
+        data = json.load(file)
+        print(f"data type: {type(data)}")
+        for key in data:
+            print(key)
+        
 
 
 if __name__ == "__main__":
