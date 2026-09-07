@@ -1,6 +1,14 @@
 UV = uv
 PROJECT = call_me_maybe.py
 
+UV_CACHE_DIR := $(CURDIR)/.uv-cache
+HF_HOME := $(CURDIR)/.huggingface
+HF_HUB_CACHE := $(HF_HOME)/hub
+
+export UV_CACHE_DIR
+export HF_HOME
+export HF_HUB_CACHE
+
 install:
 	$(UV) sync
 
@@ -13,3 +21,6 @@ lint:
 
 test:
 	$(UV) run python src/experiments/experiment.py
+
+check-cache:
+	$(UV) run python -c "import os; print(os.getenv('HF_HOME')); print(os.getenv('HF_HUB_CACHE'))"
