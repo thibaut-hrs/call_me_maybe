@@ -47,14 +47,14 @@ def is_generation_complete(
 
 def generate_constrained(
     llm: Small_LLM_Model,
-    initial_text: str,
+    current_text: str,
+    token_ids: list[int],
     target_texts: list[str],
-) -> str:
-    token_batch = llm.encode(initial_text)
-    token_ids: list[int] = token_batch.tolist()[0]
-    current_text: str = initial_text
+) -> tuple[str, list[int]]:
 
-    iteration:int = 0
+    print(f"Initial text: {current_text}")
+    print(f"Initial tokens: {token_ids}")
+    print(target_texts)
 
     while True:
         logits: list[float] = llm.get_logits_from_input_ids(token_ids)
@@ -62,12 +62,13 @@ def generate_constrained(
         valid_ids: list[int] = get_valid_token_ids(
             llm, candidate_ids, current_text, target_texts
         )
+        print(f"Number of valid IDs: {len(valid_ids)}")
         best_token_id = get_best_token_id(valid_ids, logits)
 
-        current_text += llm.decode([best_token_id])
         token_ids.append(best_token_id)
+        current_text += llm.decode([best_token_id])
 
         if is_generation_complete(current_text, target_texts):
             break
 
-    return current_text
+    return (current_text, token_ids)
