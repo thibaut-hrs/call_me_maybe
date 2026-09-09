@@ -1,5 +1,5 @@
 UV = uv
-PROJECT = call_me_maybe.py
+PROJECT = src/call_me_maybe.py
 
 UV_CACHE_DIR := $(CURDIR)/.uv-cache
 HF_HOME := $(CURDIR)/.huggingface

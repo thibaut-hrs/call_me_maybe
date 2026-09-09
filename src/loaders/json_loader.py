@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from pydantic import TypeAdapter
 
-from src.models import FunctionDefinition, TestCase
+from models import FunctionDefinition, TestCase
 
 
 def load_function_definitions(path: Path) -> list[FunctionDefinition]:
