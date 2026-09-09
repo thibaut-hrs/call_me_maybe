@@ -1,8 +1,9 @@
 from .constrained_decoder import generate_constrained
-from .function_utils import get_function_names
+from .function_utils import get_function_names, get_function_definition
 
 
 __all__ = [
     "generate_constrained",
-    "get_function_names"
+    "get_function_names",
+	"get_function_definition"
 ]

@@ -52,9 +52,7 @@ def generate_constrained(
     target_texts: list[str],
 ) -> tuple[str, list[int]]:
 
-    print(f"Initial text: {current_text}")
-    print(f"Initial tokens: {token_ids}")
-    print(target_texts)
+    token_ids = token_ids.copy()
 
     while True:
         logits: list[float] = llm.get_logits_from_input_ids(token_ids)
@@ -62,7 +60,6 @@ def generate_constrained(
         valid_ids: list[int] = get_valid_token_ids(
             llm, candidate_ids, current_text, target_texts
         )
-        print(f"Number of valid IDs: {len(valid_ids)}")
         best_token_id = get_best_token_id(valid_ids, logits)
 
         token_ids.append(best_token_id)
