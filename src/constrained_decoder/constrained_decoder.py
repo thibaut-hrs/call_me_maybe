@@ -52,6 +52,8 @@ def generate_constrained(
     target_texts: list[str],
 ) -> tuple[str, list[int]]:
 
+    target_texts = [current_text + text for text in target_texts]
+
     token_ids = token_ids.copy()
 
     while True:
