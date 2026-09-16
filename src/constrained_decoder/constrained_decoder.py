@@ -105,3 +105,38 @@ def generate_constrained(
 			break
 
 	return (current_text, token_ids)
+
+
+def generate_number(
+	llm: Small_LLM_Model,
+	current_text: str,
+	token_ids: list[int],
+	end_token_ids: list[int]
+) -> tuple[str, list[int]]:
+
+	token_ids = token_ids.copy()
+	number: str = ""
+
+	while True:
+		logits: list[float] = llm.get_logits_from_input_ids(token_ids)
+		candidate_ids: list[int] = list(range(len(logits)))
+		valid_ids: list[int] = get_valid_number_token_ids(
+			llm,
+			candidate_ids,
+			number
+		)
+
+		if is_valid_number(number):
+			valid_ids.extend(end_token_ids)
+
+		best_token_id = get_best_token_id(valid_ids, logits)
+
+		if best_token_id in end_token_ids:
+			break
+
+		token_ids.append(best_token_id)
+		number += llm.decode([best_token_id])
+
+	current_text += number
+	return (current_text, token_ids)
+

@@ -25,10 +25,9 @@ def main() -> None:
     generated_text: str = generate_function_call(
         llm,
         functions,
-        "What is the sum of 2 and 3?"
+        "What is the sum of 265 and 345?"
     )
     print(f"Generated text: {generated_text}")
-    
 
 
 if __name__ == "__main__":
