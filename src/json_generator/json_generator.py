@@ -4,8 +4,10 @@ from constrained_decoder import (
     generate_constrained,
 	generate_number,
 	get_function_descriptions,
-    get_function_definition
+    get_function_definition,
+	get_function_names
 )
+from .generate_prompt import generate_prompt
 
 
 def generate_function_call(
@@ -13,38 +15,41 @@ def generate_function_call(
 	functions: FunctionDefinition,
 	prompt: str
 ) -> str:
-	token_batch = llm.encode(prompt)
+
+	context: str = generate_prompt(prompt, functions)
+
+	token_batch = llm.encode(context)
 	token_ids = token_batch.tolist()[0]
 	logits = llm.get_logits_from_input_ids(token_ids)
-	context: str = prompt
 
-	function_descriptions = get_function_descriptions(functions)
-	target_texts = function_descriptions
+	target_texts = get_function_names(functions)
 	context, token_ids = generate_constrained(
 		llm,
 		context,
 		token_ids,
 		target_texts
 	)
+	function = get_function_definition(functions, context)
 
-	function: FunctionDefinition = get_function_definition(functions, context, prompt)
-	print(f"Founction choosen: {function.name}")
+	text_generated: str = ""
 
 	target_texts: list[str] = ['{"prompt": "' + prompt + '", ']
-	context, token_ids = generate_constrained(
+	generated, token_ids = generate_constrained(
 		llm,
 		context,
 		token_ids,
 		target_texts
 	)
+	context, text_generated = context + generated, text_generated + generated
 
 	target_texts = ['"name": "' + function.name + '", "parameters": {']
-	context, token_ids = generate_constrained(
+	generated, token_ids = generate_constrained(
 		llm,
 		context,
 		token_ids,
 		target_texts
 	)
+	context, text_generated = context + generated, text_generated + generated
 
 	param_count: int = len(function.parameters)
 
@@ -52,12 +57,13 @@ def generate_function_call(
 	for key, value in function.parameters.items():
 		i += 1
 		target_texts = ['"' + key + '": ']
-		context, token_ids = generate_constrained(
+		generated, token_ids = generate_constrained(
 			llm,
 			context,
 			token_ids,
 			target_texts
 		)
+		context, text_generated = context + generated, text_generated + generated
 
 		if value.type == "number":
 			token_full_list = list(range(len(logits)))
@@ -67,35 +73,37 @@ def generate_function_call(
 				if (llm.decode([token_id]) == " "
 				or llm.decode([token_id]) == ",")
 			]
-			print(f"End token ids: {end_token_ids}")
-			context, token_ids = generate_number(
+			generated, token_ids = generate_number(
 				llm,
 				context,
 				token_ids,
 				end_token_ids
 			)
+			context, text_generated = context + generated, text_generated + generated
 
 				
 		if value.type == "string":
 			...
 		if i < param_count:
 			target_texts = [", "]
-			context, token_ids = generate_constrained(
+			generated, token_ids = generate_constrained(
 				llm,
 				context,
 				token_ids,
 				target_texts
 			)
+			context, text_generated = context + generated, text_generated + generated
 
 	target_texts = ["}}"]
-	context, token_ids = generate_constrained(
+	generated, token_ids = generate_constrained(
 		llm,
 		context,
 		token_ids,
 		target_texts
 	)
+	context, text_generated = context + generated, text_generated + generated
 
-	return context
+	return text_generated
 
 
 

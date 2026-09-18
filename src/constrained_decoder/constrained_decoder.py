@@ -90,6 +90,8 @@ def generate_constrained(
 
 	token_ids = token_ids.copy()
 
+	generated: str = ""
+
 	while True:
 		logits: list[float] = llm.get_logits_from_input_ids(token_ids)
 		candidate_ids: list[int] = list(range(len(logits)))
@@ -99,12 +101,14 @@ def generate_constrained(
 		best_token_id = get_best_token_id(valid_ids, logits)
 
 		token_ids.append(best_token_id)
-		current_text += llm.decode([best_token_id])
+		decoded_token = llm.decode([best_token_id])
+		generated += decoded_token
+		current_text += decoded_token
 
 		if is_generation_complete(current_text, target_texts):
 			break
 
-	return (current_text, token_ids)
+	return (generated, token_ids)
 
 
 def generate_number(
@@ -137,6 +141,5 @@ def generate_number(
 		token_ids.append(best_token_id)
 		number += llm.decode([best_token_id])
 
-	current_text += number
-	return (current_text, token_ids)
+	return (number, token_ids)
 

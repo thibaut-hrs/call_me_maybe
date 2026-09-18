@@ -11,15 +11,14 @@ def get_function_descriptions(functions: list[FunctionDefinition]) -> list[str]:
 
 def get_function_definition(
         functions: list[FunctionDefinition],
-        generated_text: str,
-        prompt: str
+        generated_text: str
 ) -> FunctionDefinition:
-    description: str = generated_text[len(prompt):]
+    function_name: str = generated_text.split(' ')[-1]
     for function in functions:
-        if function.description == description:
+        if function.name == function_name:
             return function
 
     raise ValueError(
-        f"'{description}' does not match any function "
-        "description in the functions_definition.json file."
+        f"'{function_name}' does not match any function "
+        "in the functions_definition.json file."
     )
