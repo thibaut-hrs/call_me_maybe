@@ -25,7 +25,7 @@ def main() -> None:
     generated_text: str = generate_function_call(
         llm,
         functions,
-        "What is the sum of 265 and 345?"
+        "Greet Shrek"
     )
     print(f"Generated text: {generated_text}")
 

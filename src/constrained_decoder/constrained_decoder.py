@@ -143,3 +143,55 @@ def generate_number(
 
 	return (number, token_ids)
 
+
+def generate_string(
+		llm: Small_LLM_Model,
+		current_text: str,
+		token_ids: list[int],
+) -> tuple[str, list[int]]:
+	def is_valid_string_token(token: str) -> bool:
+		return (
+			token != ""
+			and '"' not in token
+			and "\\" not in token
+			and all(ord(character) >= 32 for character in token)
+		)
+
+	token_ids = token_ids.copy()
+	string: str = ''
+
+	string, token_ids = generate_constrained(llm, current_text, token_ids, ['"'])
+
+	while True:
+		logits: list[float] = llm.get_logits_from_input_ids(token_ids)
+		candidate_ids = list(range(len(logits)))
+
+		valid_ids = [
+			token_id
+			for token_id in candidate_ids
+			if is_valid_string_token(llm.decode([token_id]))
+		]
+
+		closing_quote_ids = [
+			token_id
+			for token_id in candidate_ids
+			if llm.decode([token_id]) == '"'
+		]
+
+		valid_ids.extend(closing_quote_ids)
+
+		best_token_id = get_best_token_id(valid_ids, logits)
+		decoded_token = llm.decode([best_token_id])
+
+		token_ids.append(best_token_id)
+		string += decoded_token
+
+		print(f"Added token: {decoded_token}")
+
+		if decoded_token == '"':
+			break
+
+	return (string, token_ids)
+
+
+

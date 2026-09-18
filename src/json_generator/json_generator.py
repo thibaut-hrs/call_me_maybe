@@ -3,6 +3,7 @@ from models import FunctionDefinition
 from constrained_decoder import (
     generate_constrained,
 	generate_number,
+	generate_string,
 	get_function_descriptions,
     get_function_definition,
 	get_function_names
@@ -82,8 +83,14 @@ def generate_function_call(
 			context, text_generated = context + generated, text_generated + generated
 
 				
-		if value.type == "string":
-			...
+		elif value.type == "string":
+			generated, token_ids = generate_string(
+				llm,
+				context,
+				token_ids
+			)
+			context, text_generated = context + generated, text_generated + generated
+
 		if i < param_count:
 			target_texts = [", "]
 			generated, token_ids = generate_constrained(
