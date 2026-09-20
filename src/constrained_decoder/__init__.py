@@ -9,6 +9,8 @@ from .function_utils import (
     get_function_descriptions
 )
 
+from .prompt_generator import generate_prompt
+
 
 __all__ = [
     "generate_constrained",
@@ -16,5 +18,6 @@ __all__ = [
     "generate_string",
     "get_function_names",
 	"get_function_definition",
-    "get_function_descriptions"
+    "get_function_descriptions",
+    "generate_prompt"
 ]

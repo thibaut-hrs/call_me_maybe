@@ -6,9 +6,10 @@ from constrained_decoder import (
 	generate_string,
 	get_function_descriptions,
     get_function_definition,
-	get_function_names
+	get_function_names,
+	generate_prompt
 )
-from .generate_prompt import generate_prompt
+import json
 
 
 def generate_function_call(
@@ -34,7 +35,7 @@ def generate_function_call(
 
 	text_generated: str = ""
 
-	target_texts: list[str] = ['{"prompt": "' + prompt + '", ']
+	target_texts: list[str] = ['{"prompt": ' + json.dumps(prompt) + ', ']
 	generated, token_ids = generate_constrained(
 		llm,
 		context,
@@ -87,7 +88,10 @@ def generate_function_call(
 			generated, token_ids = generate_string(
 				llm,
 				context,
-				token_ids
+				token_ids,
+				prompt,
+				function,
+				key
 			)
 			context, text_generated = context + generated, text_generated + generated
 

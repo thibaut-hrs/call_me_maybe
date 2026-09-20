@@ -25,7 +25,7 @@ def main() -> None:
     generated_text: str = generate_function_call(
         llm,
         functions,
-        "Greet Shrek"
+        "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
     )
     print(f"Generated text: {generated_text}")
 
