@@ -57,7 +57,7 @@ def get_valid_number_token_ids(
     candidate_ids: list[int],
     current_number: str
 ) -> list[int]:
-     return [
+    return [
         candidate_id
         for candidate_id in candidate_ids
         if is_valid_number_candidate(
@@ -65,7 +65,6 @@ def get_valid_number_token_ids(
             vocabulary[candidate_id]
         )
     ]
-     
 
 
 def get_best_token_id(
@@ -188,8 +187,8 @@ def generate_string(
         return True, escaped, closes_string
 
     token_ids = token_ids.copy()
-    prompt: str = generate_arg_prompt(prompt, function, parameter)
-    prompt_token_batch = llm.encode(prompt)
+    arg_prompt: str = generate_arg_prompt(prompt, function, parameter)
+    prompt_token_batch = llm.encode(arg_prompt)
     prompt_token_ids = prompt_token_batch.tolist()[0]
 
     string: str = '"'
@@ -228,6 +227,3 @@ def generate_string(
 
     json.dumps(string)
     return (string, token_ids)
-
-
-

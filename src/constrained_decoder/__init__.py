@@ -17,7 +17,7 @@ __all__ = [
     "generate_number",
     "generate_string",
     "get_function_names",
-	"get_function_definition",
+    "get_function_definition",
     "get_function_descriptions",
     "generate_prompt"
 ]

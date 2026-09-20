@@ -11,7 +11,9 @@ def generate_prompt(prompt: str, functions: list[FunctionDefinition]) -> str:
 
     available_functions: list[str] = []
     for i in range(len(function_names)):
-        available_functions.append(f'{function_names[i]}: {function_descriptions[i]}')
+        available_functions.append(
+            f'{function_names[i]}: {function_descriptions[i]}'
+        )
 
     return f"""
     You are a function router. Read the request and choose the best function
@@ -25,6 +27,7 @@ def generate_prompt(prompt: str, functions: list[FunctionDefinition]) -> str:
     Return exactly one function name, and nothing else:
     """
 
+
 def generate_arg_prompt(
     prompt: str,
     function: FunctionDefinition,
@@ -34,7 +37,7 @@ def generate_arg_prompt(
     parameters: str = ""
     for key, value in function.parameters.items():
         parameters += f"- {key}: {value}\n"
-    
+
     return f"""
     Complete one argument of a function call.
 
@@ -52,7 +55,8 @@ def generate_arg_prompt(
     Requested argument:
     {parameter}
 
-    Infer the value of the requested argument from the user request and
-    the function definition. Return exactly one JSON string value and nothing after it.
+    Infer the value of the requested argument from the user request and the
+    function definition. Return exactly one JSON string value
+    and nothing after it.
 
     {parameter} value: \""""
