@@ -37,7 +37,7 @@ def is_valid_candidate(
 
 
 def get_valid_token_ids(
-    llm: Small_LLM_Model,
+    vocabulary: list[str],
     candidate_ids: list[int],
     current_text: str,
     target_texts: list[str],
@@ -46,14 +46,14 @@ def get_valid_token_ids(
         candidate_id for candidate_id in candidate_ids
         if is_valid_candidate(
             current_text,
-            llm.decode([candidate_id]),
+            vocabulary[candidate_id],
             target_texts
         )
     ]
 
 
 def get_valid_number_token_ids(
-    llm: Small_LLM_Model,
+    vocabulary: list[str],
     candidate_ids: list[int],
     current_number: str
 ) -> list[int]:
@@ -62,7 +62,7 @@ def get_valid_number_token_ids(
         for candidate_id in candidate_ids
         if is_valid_number_candidate(
             current_number,
-            llm.decode([candidate_id])
+            vocabulary[candidate_id]
         )
     ]
      
@@ -84,6 +84,7 @@ def is_generation_complete(
 
 def generate_constrained(
     llm: Small_LLM_Model,
+    vocabulary: list[str],
     current_text: str,
     token_ids: list[int],
     target_texts: list[str],
@@ -99,12 +100,12 @@ def generate_constrained(
         logits: list[float] = llm.get_logits_from_input_ids(token_ids)
         candidate_ids: list[int] = list(range(len(logits)))
         valid_ids: list[int] = get_valid_token_ids(
-            llm, candidate_ids, current_text, target_texts
+            vocabulary, candidate_ids, current_text, target_texts
         )
         best_token_id = get_best_token_id(valid_ids, logits)
 
         token_ids.append(best_token_id)
-        decoded_token = llm.decode([best_token_id])
+        decoded_token = vocabulary[best_token_id]
         generated += decoded_token
         current_text += decoded_token
 
@@ -116,7 +117,7 @@ def generate_constrained(
 
 def generate_number(
     llm: Small_LLM_Model,
-    current_text: str,
+    vocabulary: list[str],
     token_ids: list[int],
     end_token_ids: list[int]
 ) -> tuple[str, list[int]]:
@@ -128,7 +129,7 @@ def generate_number(
         logits: list[float] = llm.get_logits_from_input_ids(token_ids)
         candidate_ids: list[int] = list(range(len(logits)))
         valid_ids: list[int] = get_valid_number_token_ids(
-            llm,
+            vocabulary,
             candidate_ids,
             number
         )
@@ -142,14 +143,14 @@ def generate_number(
             break
 
         token_ids.append(best_token_id)
-        number += llm.decode([best_token_id])
+        number += vocabulary[best_token_id]
 
     return (number, token_ids)
 
 
 def generate_string(
         llm: Small_LLM_Model,
-        current_text: str,
+        vocabulary: list[str],
         token_ids: list[int],
         prompt: str,
         function: FunctionDefinition,
@@ -203,7 +204,7 @@ def generate_string(
         valid_ids = []
 
         for token_id in candidate_ids:
-            token = llm.decode([token_id])
+            token = vocabulary[token_id]
 
             valid, _, _ = validate_string_token(token, escaped)
 
@@ -211,7 +212,7 @@ def generate_string(
                 valid_ids.append(token_id)
 
         best_token_id = get_best_token_id(valid_ids, logits)
-        decoded_token = llm.decode([best_token_id])
+        decoded_token = vocabulary[best_token_id]
 
         valid, escaped, closes_string = validate_string_token(
             decoded_token,

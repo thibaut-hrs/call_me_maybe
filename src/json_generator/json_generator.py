@@ -14,6 +14,7 @@ import json
 
 def generate_function_call(
 	llm: Small_LLM_Model,
+	vocabulary: list[str],
 	functions: FunctionDefinition,
 	prompt: str
 ) -> str:
@@ -27,6 +28,7 @@ def generate_function_call(
 	target_texts = get_function_names(functions)
 	context, token_ids = generate_constrained(
 		llm,
+		vocabulary,
 		context,
 		token_ids,
 		target_texts
@@ -38,6 +40,7 @@ def generate_function_call(
 	target_texts: list[str] = ['{"prompt": ' + json.dumps(prompt) + ', ']
 	generated, token_ids = generate_constrained(
 		llm,
+		vocabulary,
 		context,
 		token_ids,
 		target_texts
@@ -47,6 +50,7 @@ def generate_function_call(
 	target_texts = ['"name": "' + function.name + '", "parameters": {']
 	generated, token_ids = generate_constrained(
 		llm,
+		vocabulary,
 		context,
 		token_ids,
 		target_texts
@@ -61,6 +65,7 @@ def generate_function_call(
 		target_texts = ['"' + key + '": ']
 		generated, token_ids = generate_constrained(
 			llm,
+			vocabulary,
 			context,
 			token_ids,
 			target_texts
@@ -77,7 +82,7 @@ def generate_function_call(
 			]
 			generated, token_ids = generate_number(
 				llm,
-				context,
+				vocabulary,
 				token_ids,
 				end_token_ids
 			)
@@ -87,7 +92,7 @@ def generate_function_call(
 		elif value.type == "string":
 			generated, token_ids = generate_string(
 				llm,
-				context,
+				vocabulary,
 				token_ids,
 				prompt,
 				function,
@@ -99,6 +104,7 @@ def generate_function_call(
 			target_texts = [", "]
 			generated, token_ids = generate_constrained(
 				llm,
+				vocabulary,
 				context,
 				token_ids,
 				target_texts
@@ -108,6 +114,7 @@ def generate_function_call(
 	target_texts = ["}}"]
 	generated, token_ids = generate_constrained(
 		llm,
+		vocabulary,
 		context,
 		token_ids,
 		target_texts
