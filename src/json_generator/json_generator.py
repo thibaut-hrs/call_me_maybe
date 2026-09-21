@@ -1,6 +1,6 @@
 from llm_sdk import Small_LLM_Model
-from models import FunctionDefinition
-from constrained_decoder import (
+from ..models import FunctionDefinition
+from ..constrained_decoder import (
     generate_constrained,
     generate_number,
     generate_string,

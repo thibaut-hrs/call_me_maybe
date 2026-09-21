@@ -1,4 +1,4 @@
-from models import FunctionDefinition
+from ..models import FunctionDefinition
 
 
 def get_function_names(functions: list[FunctionDefinition]) -> list[str]:

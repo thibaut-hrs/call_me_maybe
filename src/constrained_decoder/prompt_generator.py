@@ -1,4 +1,4 @@
-from models import FunctionDefinition
+from ..models import FunctionDefinition
 from .function_utils import (
     get_function_names,
     get_function_descriptions,

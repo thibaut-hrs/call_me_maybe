@@ -13,14 +13,20 @@ install:
 	$(UV) sync
 
 run:
-	$(UV) run python $(PROJECT)
+	$(UV) run python -m src
 
 lint:
 	$(UV) run flake8 --exclude=.venv/,llm_sdk/,.huggingface,.mypy_cache,.uv-cache .
 	$(UV) run mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
-test:
-	$(UV) run python src/experiments/experiment.py
+debug:
+	$(UV) run python -m pdb $(PROJECT) 
+
+clean:
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+	find . -type d -name ".mypy_cache" -exec rm -rf {} +
 
 check-cache:
 	$(UV) run python -c "import os; print(os.getenv('HF_HOME')); print(os.getenv('HF_HUB_CACHE'))"
+
+.PHONY: install run lint debug clean check-cache

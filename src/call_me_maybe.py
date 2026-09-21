@@ -1,9 +1,7 @@
-"""Program entry point."""
-
 from pathlib import Path
 from llm_sdk import Small_LLM_Model
-from loaders import load_function_definitions
-from json_generator import generate_function_call
+from .loaders import load_function_definitions
+from .json_generator import generate_function_call
 import time
 
 
