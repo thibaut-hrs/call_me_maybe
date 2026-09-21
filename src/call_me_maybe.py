@@ -1,7 +1,7 @@
 from pathlib import Path
 from llm_sdk import Small_LLM_Model
-from .loaders import load_function_definitions
-from .json_generator import generate_function_call
+from .loaders import load_function_definitions, load_test_cases
+from .json_generator import generate_output_file
 import time
 
 
@@ -11,6 +11,10 @@ def main() -> None:
     functions = load_function_definitions(
         Path("functions_definition.json")
     )
+    test_cases = load_test_cases(
+        Path("function_calling_tests.json")
+    )
+    prompts: list[str] = [case.prompt for case in test_cases]
 
     llm = Small_LLM_Model(device='cpu')
 
@@ -20,13 +24,14 @@ def main() -> None:
         for token_id in range(vocab_size)
     ]
 
-    generated_text: str = generate_function_call(
+    generate_output_file(
         llm,
         vocabulary,
         functions,
-        "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
+        prompts,
+        "output.json"
     )
-    print(f"Generated text: {generated_text}")
+    
     end = time.perf_counter()
     print(f"Generation: {end - start:.2f}s")
 

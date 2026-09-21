@@ -9,6 +9,7 @@ from ..constrained_decoder import (
     generate_prompt
 )
 import json
+from pathlib import Path
 
 
 def generate_function_call(
@@ -17,6 +18,8 @@ def generate_function_call(
     functions: FunctionDefinition,
     prompt: str
 ) -> str:
+
+    print(f'Genrating a function call from a prompt: "{prompt}"')
 
     context: str = generate_prompt(prompt, functions)
 
@@ -128,11 +131,53 @@ def generate_function_call(
     return text_generated
 
 
-# def generate_json() -> list[dict]:
-#     results = []
+def generate_all_function_calls(
+    llm: Small_LLM_Model,
+    vocabulary: list[str],
+    functions: list[FunctionDefinition],
+    prompts: list[str],
+) -> list[dict]:
 
-#     for test_case in test_cases:
-#         result = generate_function_call(...)
-#         results.append(result)
+    result: list[dict] = []
 
-#     return results
+    for prompt in prompts:
+        generated_text = generate_function_call(
+            llm,
+            vocabulary,
+            functions,
+            prompt
+        )
+        result.append(json.loads(generated_text))
+
+    return result
+
+
+def write_function_calls(
+    function_calls: list[dict],
+    output_path: Path,
+) -> None:
+
+    with open(output_path, "w") as file:
+        json.dump(function_calls, file, indent=4)
+    
+
+
+def generate_output_file(
+    llm: Small_LLM_Model,
+    vocabulary: list[str],
+    functions: list[FunctionDefinition],
+    prompts: list[str],
+    output_path: Path,
+) -> None:
+
+    function_calls = generate_all_function_calls(
+        llm,
+        vocabulary,
+        functions,
+        prompts
+    )
+    write_function_calls(function_calls, output_path)
+    print(
+        "Function calls succesfully written in JSON format "
+        f"in the file '{output_path}' !"
+    )
