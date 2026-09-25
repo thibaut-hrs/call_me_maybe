@@ -192,7 +192,7 @@ def generate_string(
     prompt_token_ids = prompt_token_batch.tolist()[0]
 
     string: str = '"'
-    token_ids += llm.encode('"')
+    token_ids += llm.encode('"').tolist()[0]
 
     escaped: bool = False
 

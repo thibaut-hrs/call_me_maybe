@@ -15,7 +15,7 @@ from pathlib import Path
 def generate_function_call(
     llm: Small_LLM_Model,
     vocabulary: list[str],
-    functions: FunctionDefinition,
+    functions: list[FunctionDefinition],
     prompt: str
 ) -> str:
 
@@ -157,9 +157,10 @@ def write_function_calls(
     output_path: Path,
 ) -> None:
 
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
     with open(output_path, "w") as file:
         json.dump(function_calls, file, indent=4)
-    
 
 
 def generate_output_file(

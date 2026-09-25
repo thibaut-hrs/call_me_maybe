@@ -20,7 +20,7 @@ lint:
 	$(UV) run mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 debug:
-	$(UV) run python -m pdb $(PROJECT) 
+	$(UV) run python -m pdb $(PROJECT)
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
@@ -28,5 +28,8 @@ clean:
 
 check-cache:
 	$(UV) run python -c "import os; print(os.getenv('HF_HOME')); print(os.getenv('HF_HUB_CACHE'))"
+
+uninstall: clean
+	rm -rf .huggingface .uv-cache .venv
 
 .PHONY: install run lint debug clean check-cache
