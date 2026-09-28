@@ -1,5 +1,3 @@
-"""Functions for loading and validating project JSON files."""
-
 import json
 from pathlib import Path
 from pydantic import TypeAdapter

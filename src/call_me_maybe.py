@@ -6,9 +6,16 @@ import time
 import argparse
 from json import JSONDecodeError
 from pydantic import ValidationError
+from sys import stderr
 
 
 def parse_arguments() -> argparse.Namespace:
+    """Parse the command-line arguments used by the program.
+
+    Returns:
+        An argparse.Namespace containing the paths to the function
+        definitions, input test cases, and output file.
+    """
     parser = argparse.ArgumentParser(
         description="Generate function calls from natural language prompts."
     )
@@ -34,7 +41,14 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def main() -> None:
-    """Load and display project data."""
+    """Run the function-calling generation pipeline.
+
+    The function parses the command-line arguments, loads the function
+    definitions and test cases, initializes the language model and its
+    vocabulary, then generates and writes the function calls to the
+    specified output file. It also reports the total generation time and
+    handles expected file, JSON, validation, and interruption errors.
+    """
 
     start = time.perf_counter()
     args = parse_arguments()
@@ -71,16 +85,22 @@ def main() -> None:
         print(f"Generation: {end - start:.2f}s")
 
     except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
-        print(f"Error when opening file: {e}")
+        print(f"Error when opening file: {e}", file=stderr)
 
     except JSONDecodeError as e:
-        print(f"JSON format error with file {last_try_open}: {e}")
+        print(f"JSON format error with file {last_try_open}: {e}", file=stderr)
 
     except ValidationError as e:
-        print(f"Wrong field detected in file {last_try_open}:\n{e}")
+        print(
+            f"Wrong field detected in file {last_try_open}:\n{e}",
+            file=stderr
+        )
 
     except (KeyboardInterrupt, EOFError) as e:
-        print(f"Programm manually interrupted by user")
+        print(f"Programm manually interrupted by user", file=stderr)
+
+    except Exception as e:
+        print(f"Unknown error: {e}", file=stderr)
 
 
 if __name__ == "__main__":

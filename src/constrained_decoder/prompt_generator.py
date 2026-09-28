@@ -6,6 +6,21 @@ from .function_utils import (
 
 
 def generate_prompt(prompt: str, functions: list[FunctionDefinition]) -> str:
+    """Generate a prompt for selecting a function from a user request.
+
+    The generated prompt provides the language model with the available
+    function names and their descriptions, and instructs it to return only
+    the name of the function that best matches the user request.
+
+    Args:
+        prompt: The user's original request.
+        functions: The available function definitions used for function
+            selection.
+
+    Returns:
+        A formatted prompt instructing the language model to select one
+        function name.
+    """
     function_names = get_function_names(functions)
     function_descriptions = get_function_descriptions(functions)
 
@@ -33,6 +48,23 @@ def generate_arg_prompt(
     function: FunctionDefinition,
     parameter: str
 ) -> str:
+    """Generate a prompt for inferring a function argument value.
+
+    The generated prompt provides the language model with the user's request,
+    the selected function definition, its parameters, and the name of the
+    argument whose value must be inferred.
+
+    Args:
+        prompt: The user's original request.
+        function: The function definition for which an argument value is
+            being generated.
+        parameter: The name of the function parameter whose value must be
+            inferred.
+
+    Returns:
+        A formatted prompt instructing the language model to return the
+        requested argument as a JSON string value.
+    """
 
     parameters: str = ""
     for key, value in function.parameters.items():
