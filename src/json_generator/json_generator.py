@@ -15,6 +15,7 @@ from pathlib import Path
 def generate_function_call(
     llm: Small_LLM_Model,
     vocabulary: list[str],
+    token_index: dict[str, list[int]],
     end_num_token_ids: list[int],
     functions: list[FunctionDefinition],
     prompt: str
@@ -46,6 +47,7 @@ def generate_function_call(
     context, token_ids = generate_constrained(
         llm,
         vocabulary,
+        token_index,
         context,
         token_ids,
         target_texts
@@ -58,6 +60,7 @@ def generate_function_call(
     generated, token_ids = generate_constrained(
         llm,
         vocabulary,
+        token_index,
         context,
         token_ids,
         target_texts
@@ -68,6 +71,7 @@ def generate_function_call(
     generated, token_ids = generate_constrained(
         llm,
         vocabulary,
+        token_index,
         context,
         token_ids,
         target_texts
@@ -83,6 +87,7 @@ def generate_function_call(
         generated, token_ids = generate_constrained(
             llm,
             vocabulary,
+            token_index,
             context,
             token_ids,
             target_texts
@@ -94,6 +99,7 @@ def generate_function_call(
             generated, token_ids = generate_number(
                 llm,
                 vocabulary,
+                token_index,
                 token_ids,
                 end_num_token_ids
             )
@@ -117,6 +123,7 @@ def generate_function_call(
             generated, token_ids = generate_constrained(
                 llm,
                 vocabulary,
+                token_index,
                 context,
                 token_ids,
                 target_texts
@@ -128,6 +135,7 @@ def generate_function_call(
     generated, token_ids = generate_constrained(
         llm,
         vocabulary,
+        token_index,
         context,
         token_ids,
         target_texts
@@ -141,6 +149,7 @@ def generate_all_function_calls(
     llm: Small_LLM_Model,
     vocabulary: list[str],
     end_num_token_ids: list[int],
+    token_index: dict[str, list[int]],
     functions: list[FunctionDefinition],
     prompts: list[str],
 ) -> list[dict]:
@@ -166,6 +175,7 @@ def generate_all_function_calls(
         generated_text = generate_function_call(
             llm,
             vocabulary,
+            token_index,
             end_num_token_ids,
             functions,
             prompt
@@ -198,6 +208,7 @@ def generate_output_file(
     llm: Small_LLM_Model,
     vocabulary: list[str],
     end_num_token_ids: list[int],
+    token_index: dict[str, list[int]],
     functions: list[FunctionDefinition],
     prompts: list[str],
     output_path: Path,
@@ -220,6 +231,7 @@ def generate_output_file(
         llm,
         vocabulary,
         end_num_token_ids,
+        token_index,
         functions,
         prompts
     )

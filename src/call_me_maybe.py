@@ -40,6 +40,19 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def build_token_index(vocabulary: list[str]) -> dict[str, list[int]]:
+    token_index: dict[str, list[int]] = {}
+
+    for token_id, token in enumerate(vocabulary):
+        if token == "":
+            continue
+
+        first_character = token[0]
+        token_index.setdefault(first_character, []).append(token_id)
+
+    return token_index
+
+
 def main() -> None:
     """Run the function-calling generation pipeline.
 
@@ -65,13 +78,14 @@ def main() -> None:
         )
         prompts: list[str] = [case.prompt for case in test_cases]
 
-        llm = Small_LLM_Model()
+        llm = Small_LLM_Model(device="cpu")
 
         vocab_size: int = len(llm.get_logits_from_input_ids([0]))
         vocabulary = [
             llm.decode([token_id])
             for token_id in range(vocab_size)
         ]
+
         end_num_token_ids = [
             token_id
             for token_id, token in enumerate(vocabulary)
@@ -81,10 +95,13 @@ def main() -> None:
             )
         ]
 
+        token_index = build_token_index(vocabulary)
+
         generate_output_file(
             llm,
             vocabulary,
             end_num_token_ids,
+            token_index,
             functions,
             prompts,
             Path(args.output)
@@ -108,8 +125,8 @@ def main() -> None:
     except (KeyboardInterrupt, EOFError):
         print("Programm manually interrupted by user", file=stderr)
 
-    except Exception as e:
-        print(f"Unknown error: {e}", file=stderr)
+    # except Exception as e:
+    #     print(f"Unknown error: {e}", file=stderr)
 
 
 if __name__ == "__main__":

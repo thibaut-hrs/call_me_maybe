@@ -74,54 +74,58 @@ def is_valid_candidate(
 
 def get_valid_token_ids(
     vocabulary: list[str],
-    candidate_ids: list[int],
+    token_index: dict[str, list[int]],
     current_text: str,
     target_texts: list[str],
 ) -> list[int]:
-    """Filter token IDs to those that can extend the current text.
+    next_characters = {
+        target[len(current_text)]
+        for target in target_texts
+        if target.startswith(current_text)
+        and len(target) > len(current_text)
+    }
 
-    Args:
-        vocabulary: The model vocabulary mapping token IDs to token texts.
-        candidate_ids: The token IDs to evaluate.
-        current_text: The text generated so far.
-        target_texts: The possible complete target texts.
+    candidate_ids = []
 
-    Returns:
-        A list containing only the candidate token IDs that can extend
-        current_text toward at least one target text.
-    """
+    for character in next_characters:
+        candidate_ids.extend(token_index.get(character, []))
+
     return [
-        candidate_id for candidate_id in candidate_ids
+        candidate_id
+        for candidate_id in candidate_ids
         if is_valid_candidate(
             current_text,
             vocabulary[candidate_id],
-            target_texts
+            target_texts,
         )
     ]
 
 
 def get_valid_number_token_ids(
     vocabulary: list[str],
-    candidate_ids: list[int],
-    current_number: str
+    token_index: dict[str, list[int]],
+    current_number: str,
 ) -> list[int]:
-    """Filter token IDs to those that can extend the current number.
+    if current_number == "":
+        next_characters = "-0123456789"
+    elif current_number == "-":
+        next_characters = "0123456789"
+    elif "." not in current_number:
+        next_characters = ".0123456789"
+    else:
+        next_characters = "0123456789"
 
-    Args:
-        vocabulary: The model vocabulary mapping token IDs to token texts.
-        candidate_ids: The token IDs to evaluate.
-        current_number: The number text generated so far.
+    candidate_ids = []
 
-    Returns:
-        A list containing only the candidate token IDs that preserve a
-        valid number format.
-    """
+    for character in next_characters:
+        candidate_ids.extend(token_index.get(character, []))
+
     return [
         candidate_id
         for candidate_id in candidate_ids
         if is_valid_number_candidate(
             current_number,
-            vocabulary[candidate_id]
+            vocabulary[candidate_id],
         )
     ]
 
@@ -163,6 +167,7 @@ def is_generation_complete(
 def generate_constrained(
     llm: Small_LLM_Model,
     vocabulary: list[str],
+    token_index: dict[str, list[int]],
     current_text: str,
     token_ids: list[int],
     target_texts: list[str],
@@ -194,9 +199,8 @@ def generate_constrained(
 
     while True:
         logits: list[float] = llm.get_logits_from_input_ids(token_ids)
-        candidate_ids: list[int] = list(range(len(logits)))
         valid_ids: list[int] = get_valid_token_ids(
-            vocabulary, candidate_ids, current_text, target_texts
+            vocabulary, token_index, current_text, target_texts
         )
         best_token_id = get_best_token_id(valid_ids, logits)
 
@@ -214,6 +218,7 @@ def generate_constrained(
 def generate_number(
     llm: Small_LLM_Model,
     vocabulary: list[str],
+    token_index: dict[str, list[int]],
     token_ids: list[int],
     end_token_ids: list[int]
 ) -> tuple[str, list[int]]:
@@ -239,10 +244,9 @@ def generate_number(
 
     while True:
         logits: list[float] = llm.get_logits_from_input_ids(token_ids)
-        candidate_ids: list[int] = list(range(len(logits)))
         valid_ids: list[int] = get_valid_number_token_ids(
             vocabulary,
-            candidate_ids,
+            token_index,
             number
         )
 
@@ -345,7 +349,7 @@ def generate_string(
 
     while True:
         logits = llm.get_logits_from_input_ids(prompt_token_ids)
-        candidate_ids = list(range(len(logits)))
+        candidate_ids = range(len(vocabulary))
 
         valid_ids = []
 
