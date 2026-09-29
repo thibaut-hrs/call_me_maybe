@@ -65,20 +65,29 @@ def main() -> None:
         )
         prompts: list[str] = [case.prompt for case in test_cases]
 
-        llm = Small_LLM_Model(device='cpu')
+        llm = Small_LLM_Model()
 
         vocab_size: int = len(llm.get_logits_from_input_ids([0]))
         vocabulary = [
             llm.decode([token_id])
             for token_id in range(vocab_size)
         ]
+        end_num_token_ids = [
+            token_id
+            for token_id, token in enumerate(vocabulary)
+            if (
+                llm.decode([token_id]) == " "
+                or llm.decode([token_id]) == ","
+            )
+        ]
 
         generate_output_file(
             llm,
             vocabulary,
+            end_num_token_ids,
             functions,
             prompts,
-            args.output
+            Path(args.output)
         )
 
         end = time.perf_counter()

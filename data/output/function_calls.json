@@ -1,0 +1,10 @@
+[
+    {
+        "prompt": "Calculate 154 + -123",
+        "name": "fn_add_numbers",
+        "parameters": {
+            "a": 154,
+            "b": 123
+        }
+    }
+]

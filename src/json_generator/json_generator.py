@@ -15,6 +15,7 @@ from pathlib import Path
 def generate_function_call(
     llm: Small_LLM_Model,
     vocabulary: list[str],
+    end_num_token_ids: list[int],
     functions: list[FunctionDefinition],
     prompt: str
 ) -> str:
@@ -40,7 +41,6 @@ def generate_function_call(
 
     token_batch = llm.encode(context)
     token_ids = token_batch.tolist()[0]
-    logits = llm.get_logits_from_input_ids(token_ids)
 
     target_texts = get_function_names(functions)
     context, token_ids = generate_constrained(
@@ -91,20 +91,11 @@ def generate_function_call(
         text_generated = text_generated + generated
 
         if value.type == "number":
-            token_full_list = list(range(len(logits)))
-            end_token_ids = [
-                token_id
-                for token_id in token_full_list
-                if (
-                    llm.decode([token_id]) == " "
-                    or llm.decode([token_id]) == ","
-                )
-            ]
             generated, token_ids = generate_number(
                 llm,
                 vocabulary,
                 token_ids,
-                end_token_ids
+                end_num_token_ids
             )
             context = context + generated
             text_generated = text_generated + generated
@@ -149,6 +140,7 @@ def generate_function_call(
 def generate_all_function_calls(
     llm: Small_LLM_Model,
     vocabulary: list[str],
+    end_num_token_ids: list[int],
     functions: list[FunctionDefinition],
     prompts: list[str],
 ) -> list[dict]:
@@ -174,6 +166,7 @@ def generate_all_function_calls(
         generated_text = generate_function_call(
             llm,
             vocabulary,
+            end_num_token_ids,
             functions,
             prompt
         )
@@ -204,6 +197,7 @@ def write_function_calls(
 def generate_output_file(
     llm: Small_LLM_Model,
     vocabulary: list[str],
+    end_num_token_ids: list[int],
     functions: list[FunctionDefinition],
     prompts: list[str],
     output_path: Path,
@@ -225,6 +219,7 @@ def generate_output_file(
     function_calls = generate_all_function_calls(
         llm,
         vocabulary,
+        end_num_token_ids,
         functions,
         prompts
     )
