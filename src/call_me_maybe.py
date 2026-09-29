@@ -96,8 +96,8 @@ def main() -> None:
             file=stderr
         )
 
-    except (KeyboardInterrupt, EOFError) as e:
-        print(f"Programm manually interrupted by user", file=stderr)
+    except (KeyboardInterrupt, EOFError):
+        print("Programm manually interrupted by user", file=stderr)
 
     except Exception as e:
         print(f"Unknown error: {e}", file=stderr)

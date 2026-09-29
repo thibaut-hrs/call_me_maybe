@@ -2,7 +2,6 @@ from llm_sdk import Small_LLM_Model
 import re
 from .prompt_generator import generate_arg_prompt
 from ..models import FunctionDefinition
-import json
 
 
 NUMBER_PATTERN = re.compile(r"-?(?:[0-9]+(?:\.[0-9]*)?)")
