@@ -78,6 +78,24 @@ def get_valid_token_ids(
     current_text: str,
     target_texts: list[str],
 ) -> list[int]:
+    """Return token IDs that keep the generated text as a valid target prefix.
+
+    Candidate tokens are first selected using the token index based on the
+    possible next characters, then checked against the target texts to ensure
+    that appending the token keeps the generated text valid.
+
+    Args:
+        vocabulary: The model vocabulary mapping token IDs to token texts.
+        token_index: Mapping from the first character of
+            a token to its token IDs.
+        current_text: The text generated so far.
+        target_texts: The possible complete target texts.
+
+    Returns:
+        A list of token IDs that can extend current_text toward at least one
+        target text.
+    """
+
     next_characters = {
         target[len(current_text)]
         for target in target_texts
@@ -106,6 +124,24 @@ def get_valid_number_token_ids(
     token_index: dict[str, list[int]],
     current_number: str,
 ) -> list[int]:
+    """
+    Return token IDs that can extend the current number validly.
+
+    Candidate tokens are first selected from the token index using the
+    characters that can legally follow the current number, then validated
+    against the supported number format.
+
+    Args:
+        vocabulary: The model vocabulary mapping token IDs to token texts.
+        token_index: Mapping from the first character
+            of a token to its token IDs.
+        current_number: The number text generated so far.
+
+    Returns:
+        A list of token IDs that can be appended without producing an invalid
+        number.
+    """
+
     if current_number == "":
         next_characters = "-0123456789"
     elif current_number == "-":
@@ -175,42 +211,57 @@ def generate_constrained(
     """Generate text while restricting tokens to valid target prefixes.
 
     At each generation step, only tokens that keep the generated text as a
-    prefix of at least one target text are considered. Among those tokens,
-    the one with the highest model logit is selected.
+    prefix of at least one target text are considered. Candidate tokens are
+    filtered using the token index before their validity is checked. The token
+    with the highest model logit is then selected.
+
+    The language model uses a key-value cache so that, after the initial
+    forward pass, only the newly generated token needs to be processed at each
+    generation step.
 
     Args:
         llm: The language model used to generate the next-token logits.
         vocabulary: The model vocabulary mapping token IDs to token texts.
+        token_index: Mapping from the first character
+            of a token to its token IDs.
         current_text: The text already present before constrained generation.
         token_ids: The token IDs corresponding to the current model input.
-        target_texts: The possible texts that the model is allowed to
-            generate after current_text.
+        target_texts: The possible texts that the model is allowed to generate
+            after current_text.
 
     Returns:
         A tuple containing the generated text and the updated list of token
         IDs.
     """
-
     target_texts = [current_text + text for text in target_texts]
 
     token_ids = token_ids.copy()
 
     generated: str = ""
 
+    logits, cache = llm.get_logits_from_input_ids_with_cache(
+        token_ids,
+        None,
+    )
+
     while True:
-        logits: list[float] = llm.get_logits_from_input_ids(token_ids)
         valid_ids: list[int] = get_valid_token_ids(
             vocabulary, token_index, current_text, target_texts
         )
         best_token_id = get_best_token_id(valid_ids, logits)
-
         token_ids.append(best_token_id)
+
         decoded_token = vocabulary[best_token_id]
         generated += decoded_token
         current_text += decoded_token
 
         if is_generation_complete(current_text, target_texts):
             break
+
+        logits, cache = llm.get_logits_from_input_ids_with_cache(
+            [best_token_id],
+            cache,
+        )
 
     return (generated, token_ids)
 
@@ -225,12 +276,19 @@ def generate_number(
     """Generate a valid number using constrained token decoding.
 
     Tokens that would produce an invalid number are excluded from the
-    candidates. Once the generated text forms a valid number, end tokens
-    are also allowed so that generation can terminate.
+    candidates. The token index is used to limit the candidates to tokens
+    beginning with characters that can legally continue the current number.
+    Once the generated text forms a valid number, end tokens are also allowed
+    so that generation can terminate.
+
+    The language model uses a key-value cache to avoid recomputing the complete
+    input sequence at every generation step.
 
     Args:
         llm: The language model used to generate the next-token logits.
         vocabulary: The model vocabulary mapping token IDs to token texts.
+        token_index: Mapping from the first character of a token
+            to its token IDs.
         token_ids: The token IDs corresponding to the current model input.
         end_token_ids: Token IDs that can terminate number generation.
 
@@ -242,8 +300,12 @@ def generate_number(
     token_ids = token_ids.copy()
     number: str = ""
 
+    logits, cache = llm.get_logits_from_input_ids_with_cache(
+        token_ids,
+        None,
+    )
+
     while True:
-        logits: list[float] = llm.get_logits_from_input_ids(token_ids)
         valid_ids: list[int] = get_valid_number_token_ids(
             vocabulary,
             token_index,
@@ -260,6 +322,11 @@ def generate_number(
 
         token_ids.append(best_token_id)
         number += vocabulary[best_token_id]
+
+        logits, cache = llm.get_logits_from_input_ids_with_cache(
+            token_ids,
+            cache,
+        )
 
     return (number, token_ids)
 
@@ -278,6 +345,9 @@ def generate_string(
     generation so that the resulting value follows JSON string rules.
     Invalid escape sequences and control characters are rejected, while an
     unescaped closing quote terminates the generated string.
+
+    The language model uses a key-value cache so that only the newly generated
+    token is processed after the initial forward pass.
 
     Args:
         llm: The language model used to generate the string value.
@@ -347,8 +417,12 @@ def generate_string(
 
     escaped: bool = False
 
+    logits, cache = llm.get_logits_from_input_ids_with_cache(
+        prompt_token_ids,
+        None,
+    )
+
     while True:
-        logits = llm.get_logits_from_input_ids(prompt_token_ids)
         candidate_ids = range(len(vocabulary))
 
         valid_ids = []
@@ -375,5 +449,10 @@ def generate_string(
 
         if closes_string and not escaped:
             break
+
+        logits, cache = llm.get_logits_from_input_ids_with_cache(
+            [best_token_id],
+            cache,
+        )
 
     return (string, token_ids)

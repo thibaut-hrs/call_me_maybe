@@ -79,7 +79,10 @@ def main() -> None:
         prompts: list[str] = [case.prompt for case in test_cases]
 
         llm = Small_LLM_Model(device="cpu")
+        end = time.perf_counter()
+        print(f"LLM Loader: {end - start:.2f}s")
 
+        print("Loading vocabulary...")
         vocab_size: int = len(llm.get_logits_from_input_ids([0]))
         vocabulary = [
             llm.decode([token_id])
@@ -97,6 +100,7 @@ def main() -> None:
 
         token_index = build_token_index(vocabulary)
 
+        start = time.perf_counter()
         generate_output_file(
             llm,
             vocabulary,
@@ -106,9 +110,8 @@ def main() -> None:
             prompts,
             Path(args.output)
         )
-
         end = time.perf_counter()
-        print(f"Generation: {end - start:.2f}s")
+        print(f"Generation time: {end - start:.2f}s")
 
     except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
         print(f"Error when opening file: {e}", file=stderr)

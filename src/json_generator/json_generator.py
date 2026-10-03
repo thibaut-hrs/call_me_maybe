@@ -10,6 +10,7 @@ from ..constrained_decoder import (
 )
 import json
 from pathlib import Path
+from sys import stderr
 
 
 def generate_function_call(
@@ -23,12 +24,15 @@ def generate_function_call(
     """Generate a JSON function call from a user prompt.
 
     The function first selects the function that best matches the user
-    prompt, then generates the corresponding JSON structure and infers
-    the value of each function parameter using constrained decoding.
+    prompt, then generates the corresponding JSON structure and infers the
+    value of each function parameter using constrained decoding.
 
     Args:
         llm: The language model used to generate the function call.
         vocabulary: The model vocabulary mapping token IDs to token texts.
+        token_index: Mapping from the first character of a token to
+            its token IDs,u sed to optimize constrained token selection.
+        end_num_token_ids: Token IDs that can terminate number generation.
         functions: The available function definitions.
         prompt: The user request from which the function call is generated.
 
@@ -95,7 +99,7 @@ def generate_function_call(
         context = context + generated
         text_generated = text_generated + generated
 
-        if value.type == "number":
+        if value.type == "number" or value.type == "integer":
             generated, token_ids = generate_number(
                 llm,
                 vocabulary,
@@ -117,6 +121,17 @@ def generate_function_call(
             )
             context = context + generated
             text_generated = text_generated + generated
+
+        elif value.type == "boolean":
+            target_texts = ['true', 'false']
+            generated, token_ids = generate_constrained(
+                llm,
+                vocabulary,
+                token_index,
+                context,
+                token_ids,
+                target_texts
+            )
 
         if i < param_count:
             target_texts = [", "]
@@ -155,15 +170,17 @@ def generate_all_function_calls(
 ) -> list[dict]:
     """Generate function calls for a list of user prompts.
 
-    Each prompt is processed independently by generate_function_call(),
-    and the resulting JSON strings are parsed into Python dictionaries.
+    Each prompt is processed independently by generate_function_call(), and
+    the resulting JSON strings are parsed into Python dictionaries.
 
     Args:
         llm: The language model used to generate the function calls.
         vocabulary: The model vocabulary mapping token IDs to token texts.
+        end_num_token_ids: Token IDs that can terminate number generation.
+        token_index: Mapping from the first character
+            of a token to its token IDs.
         functions: The available function definitions.
-        prompts: The user prompts for which function calls should be
-            generated.
+        prompts: The user prompts for which function calls should be generated.
 
     Returns:
         A list of dictionaries containing the generated function calls.
@@ -172,6 +189,11 @@ def generate_all_function_calls(
     result: list[dict] = []
 
     for prompt in prompts:
+
+        if not prompt:
+            print("Warning: empty prompts are ignored", file=stderr)
+            continue
+
         generated_text = generate_function_call(
             llm,
             vocabulary,
@@ -222,6 +244,9 @@ def generate_output_file(
     Args:
         llm: The language model used to generate the function calls.
         vocabulary: The model vocabulary mapping token IDs to token texts.
+        end_num_token_ids: Token IDs that can terminate number generation.
+        token_index: Mapping from the first character
+            of a token to its token IDs.
         functions: The available function definitions.
         prompts: The user prompts to process.
         output_path: The path of the JSON file to create.

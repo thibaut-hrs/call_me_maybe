@@ -9,6 +9,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenize
 from huggingface_hub import hf_hub_download
 import os
 
+from transformers import DynamicCache
+
 
 logging.set_verbosity_error()  # keep the console clean
 
@@ -95,8 +97,9 @@ class Small_LLM_Model:
         with torch.no_grad():
             out = self._model(input_ids=input_tensor)
         # Get logits for the last token in the sequence for the batch (batch size 1)
-        logits = out.logits[0, -1].tolist()
-        return [float(x) for x in logits]
+        # logits = out.logits[0, -1].tolist()
+        # return [float(x) for x in logits]
+        return out.logits[0, -1].tolist()
 
 
     def get_path_to_vocab_file(self) -> str:
@@ -124,3 +127,25 @@ class Small_LLM_Model:
             filename=tokenizer_file_name
         )
         return tokenizer_path
+
+    def get_logits_from_input_ids_with_cache(
+        self,
+        input_ids: list[int],
+        past_key_values=None,
+    ):
+        input_tensor = torch.tensor(
+            [input_ids],
+            device=self._device,
+            dtype=torch.long,
+        )
+
+        with torch.no_grad():
+            out = self._model(
+                input_ids=input_tensor,
+                past_key_values=past_key_values,
+                use_cache=True,
+            )
+
+        logits = out.logits[0, -1].tolist()
+
+        return logits, out.past_key_values

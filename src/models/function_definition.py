@@ -10,7 +10,7 @@ class ParameterDefinition(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    type: Literal["string", "number"]
+    type: Literal["string", "number", "integer", "boolean"]
 
 
 class ReturnDefinition(BaseModel):
@@ -18,7 +18,7 @@ class ReturnDefinition(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    type: Literal["string", "number"]
+    type: Literal["string", "number", "integer", "boolean"]
 
 
 class FunctionDefinition(BaseModel):
