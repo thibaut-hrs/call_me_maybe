@@ -5,6 +5,7 @@ from ..models import FunctionDefinition
 
 
 NUMBER_PATTERN = re.compile(r"-?(?:[0-9]+(?:\.[0-9]*)?)")
+# NUMBER_PATTERN = re.compile(r"-?[0-9]+\.[0-9]+")
 
 
 def is_valid_number_candidate(
@@ -327,6 +328,17 @@ def generate_number(
             token_ids,
             cache,
         )
+
+    if "." not in number:
+        terminaison, token_ids = generate_constrained(
+            llm,
+            vocabulary,
+            token_index,
+            number,
+            token_ids,
+            [".0"]
+        )
+        number += terminaison
 
     return (number, token_ids)
 
